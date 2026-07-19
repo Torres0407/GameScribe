@@ -1,0 +1,6 @@
+# GameScribe Narrative Style Guide
+
+- Format dialogue in screenplay standard: `CHARACTER NAME\n(parenthetical direction)\n"Line of dialogue"`
+- Use clear header hierarchy (`# Title`, `## Chapter / Scene`, `### Decision Points`).
+- Explicitly delineate player choices and branching outcomes with formatted bullet nodes (`- [CHOICE A] -> Leads to...`).
+- Include ambient environmental design and sound cues (`[AUDIO CUE: Distant metallic thud]`).

@@ -1,0 +1,22 @@
+{
+  "name": "gamescribe-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GameScribe - AI Game Script Generator Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:mobile": "npm run dev --workspace=apps/mobile",
+    "build:types": "npm run build --workspace=packages/shared-types",
+    "build:api": "npm run build --workspace=apps/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "ingest": "ts-node scripts/ingest-corpus.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "ts-node": "^10.9.2"
+  }
+}
