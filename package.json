@@ -16,7 +16,11 @@
     "ingest": "ts-node scripts/ingest-corpus.ts"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
-    "ts-node": "^10.9.2"
+    "@react-native/debugger-frontend": "^0.74.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1"
   }
 }

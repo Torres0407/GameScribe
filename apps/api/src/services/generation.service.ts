@@ -6,6 +6,7 @@ import { pool } from '../config/db';
 import { RetrievalService } from './retrieval.service';
 import { LLMService } from './llm.service';
 import { MemoryService } from './memory.service';
+import { devAssetsStore } from '../controllers/project.controller';
 import { GenerateScriptRequest, GenerationJobStatus } from '@gamescribe/shared-types';
 
 const connection = new Redis(env.REDIS_URL, {
@@ -148,21 +149,40 @@ export class GenerationQueueService {
         projectMemory: projectMemories.map(m => ({ key: m.key, value: m.value })),
       });
 
-      // Calculate next version dynamically to avoid overwriting existing revisions
-      const versionRes = await pool.query(
-        'SELECT COALESCE(MAX(version), 0) + 1 as next_version FROM project_assets WHERE project_id = $1 AND asset_name = $2',
-        [projectId, assetName]
-      );
-      const nextVersion = parseInt(versionRes.rows[0]?.next_version || '1', 10);
+      // Save generated asset to database with dev fallback
+      try {
+        const versionRes = await pool.query(
+          'SELECT COALESCE(MAX(version), 0) + 1 as next_version FROM project_assets WHERE project_id = $1 AND asset_name = $2',
+          [projectId, assetName]
+        );
+        const nextVersion = parseInt(versionRes.rows[0]?.next_version || '1', 10);
 
-      // Save generated asset to database
-      await pool.query(
-        `INSERT INTO project_assets (project_id, asset_name, content, version)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (project_id, asset_name, version)
-         DO UPDATE SET content = EXCLUDED.content`,
-        [projectId, assetName, content, nextVersion]
-      );
+        await pool.query(
+          `INSERT INTO project_assets (project_id, asset_name, content, version)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (project_id, asset_name, version)
+           DO UPDATE SET content = EXCLUDED.content`,
+          [projectId, assetName, content, nextVersion]
+        );
+      } catch (err) {
+        const devAssets = devAssetsStore.get(projectId) || [];
+        const existingIndex = devAssets.findIndex(a => a.assetName === assetName);
+        const assetObj = {
+          id: `asset_${Date.now()}_${i}`,
+          projectId,
+          assetName,
+          content,
+          version: 1,
+          createdAt: new Date().toISOString(),
+        };
+
+        if (existingIndex >= 0) {
+          devAssets[existingIndex] = assetObj;
+        } else {
+          devAssets.push(assetObj);
+        }
+        devAssetsStore.set(projectId, devAssets);
+      }
 
       generatedAssets.push(assetName);
 
